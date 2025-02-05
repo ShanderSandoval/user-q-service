@@ -7,6 +7,6 @@ RUN gradle bootJar
 
 # Stage 2: Run
 FROM eclipse-temurin:21-jre
-COPY --from=build /app/*.jar /app/person-query-service.jar
+COPY --from=build /app/*.jar /app/user-query-service.jar
 WORKDIR /app
-CMD ["java", "-jar", "person-query-service.jar"]
+CMD ["java", "-jar", "user-query-service.jar"]

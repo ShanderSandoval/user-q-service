@@ -1,6 +1,6 @@
 spring:
   application:
-    name: person-query-service
+    name: user-query-service
   data:
     mongodb:
       database: projectDatabase
@@ -9,14 +9,14 @@ spring:
   kafka:
     bootstrap-servers: localhost:10094
     consumer:
-      group-id: person-group
+      group-id: user-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
         spring.json.trusted.packages: "*"
 server:
   address: '0.0.0.0'
-  port: 10012
+  port: 10022
 env:
   kafka:
-    topicEvent: person-event
+    topicEvent: user-event
