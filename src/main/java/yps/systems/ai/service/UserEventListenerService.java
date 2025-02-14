@@ -1,5 +1,7 @@
 package yps.systems.ai.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
@@ -21,30 +23,28 @@ public class UserEventListenerService {
     }
 
     @KafkaListener(topics = "${env.kafka.topicEvent}")
-    public void listen(@Payload Object payload, @Header("eventType") String eventType, @Header("source") String source) {
+    public void listen(@Payload String payload, @Header("eventType") String eventType, @Header("source") String source) {
+        System.out.println("Processing " + eventType + " event from " + source);
         switch (eventType) {
             case "CREATE_USER":
-                if (payload instanceof User user) {
-                    System.out.println("Processing CREATE_USER event from " + source);
+                try {
+                    User user = new ObjectMapper().readValue(payload, User.class);
                     userRepository.save(user);
+                } catch (JsonProcessingException e) {
+                    System.err.println("Error parsing Person JSON: " + e.getMessage());
                 }
                 break;
             case "UPDATE_USER":
-                if (payload instanceof User user) {
-                    System.out.println("Processing UPDATE_USER event from " + source);
+                try {
+                    User user = new ObjectMapper().readValue(payload, User.class);
                     Optional<User> userOptional = userRepository.findById(user.getId());
-                    if (userOptional.isPresent()) {
-                        userOptional.get().setId(user.getId());
-                        userRepository.save(userOptional.get());
-                    }
+                    userOptional.ifPresent(userRepository::save);
+                } catch (JsonProcessingException e) {
+                    System.err.println("Error parsing Person JSON: " + e.getMessage());
                 }
-                break;
             case "DELETE_USER":
-                if (payload instanceof String userElementId) {
-                    System.out.println("Processing DELETE_USER event from " + source);
-                    Optional<User> userOptional = userRepository.findById(userElementId);
-                    userOptional.ifPresent(value -> userRepository.deleteById(value.getId()));
-                }
+                Optional<User> userOptional = userRepository.findById(payload.replaceAll("\"", ""));
+                userOptional.ifPresent(value -> userRepository.deleteById(value.getId()));
                 break;
             default:
                 System.out.println("Unknown event type: " + eventType);
